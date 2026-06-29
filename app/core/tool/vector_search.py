@@ -17,7 +17,7 @@ class VectorSearchInput(BaseModel):
         description="Câu truy vấn hoặc cụm từ khóa để tìm kiếm văn bản pháp luật liên quan."
     )
     collection_name: str = Field(
-        default="RAG_lawer",
+        default="RAG_lawyer",
         description="Tên collection trong vector database cần thực hiện tìm kiếm."
     )
     k: int = Field(
@@ -47,7 +47,7 @@ class VectorSearchCore:
             k: int = 5,
             score_threshold: Optional[float] = None,
             filter: Optional[Any] = None
-    ) -> List[Tuple[Document, float]]:
+    ) -> List[Document]:
         """
         Thực hiện tìm kiếm ngữ nghĩa trong Vector Store.
         
@@ -55,7 +55,7 @@ class VectorSearchCore:
         """
         try:
             results = self.vector_store_manager.semantic_search(
-                query=query,
+                query=query.upper(),
                 collection_name=collection_name,
                 k=k,
                 score_threshold=score_threshold,

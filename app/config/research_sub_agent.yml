@@ -1,0 +1,8 @@
+name: "research-sub-agent"
+description: "Delegate research to the sub-agent researcher. Only give this researcher one topic at a time."
+#provider: "google"
+#model_name: "gemini-2.5-flash"
+temperature: 0.5
+system_prompt_path: "app/config/prompts/research_sub_agent_prompt_1.txt"
+tools:
+  - "SearchLawTool"

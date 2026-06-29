@@ -1,4 +1,6 @@
+import torch
 from langchain_core.embeddings import Embeddings
+
 
 def get_emb(model_name: str, **kwargs) -> Embeddings:
     """
@@ -17,5 +19,9 @@ def get_emb(model_name: str, **kwargs) -> Embeddings:
 
     return HuggingFaceEmbeddings(
         model_name=model_name,
+        model_kwargs=
+        {
+            "device": "cuda" if torch.cuda.is_available() else "cpu",
+        },
         **kwargs
     )

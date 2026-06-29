@@ -2,6 +2,8 @@ import os
 import sys
 from typing import List, Tuple, Optional, Any, Type
 import asyncio
+
+import torch
 from pydantic import BaseModel, Field
 from langchain_core.tools import BaseTool
 from langchain_core.documents import Document
@@ -30,7 +32,8 @@ class RerankerModelManager:
             try:
                 from sentence_transformers import CrossEncoder
                 print(f"Đang tải mô hình Re-ranker: {model_name}...", file=sys.stderr)
-                self._model = CrossEncoder(model_name)
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+                self._model = CrossEncoder(model_name, device=device)
                 self._current_model_name = model_name
                 print(f"Tải mô hình Re-ranker '{model_name}' thành công.", file=sys.stderr)
             except ImportError as e:
@@ -55,9 +58,9 @@ class RerankingDocumentInput(BaseModel):
         ...,
         description="Câu truy vấn dùng để tính điểm mức độ liên quan với các tài liệu."
     )
-    documents: List[Any] = Field(
+    documents: List[Document] = Field(
         ...,
-        description="Danh sách các tài liệu cần xếp hạng lại (có thể là đối tượng Document, dictionary hoặc string)."
+        description="Danh sách các tài liệu cần xếp hạng lại dưới dạng danh sách các đối tượng Document."
     )
     model_name: Optional[str] = Field(
         default=None,
@@ -84,6 +87,8 @@ class RerankingDocumentCore:
         """
         if not documents:
             return []
+        if isinstance(documents[0], tuple):
+            documents = self.format_list_document(documents)
 
         try:
             # 1. Chuẩn hóa documents đầu vào thành List[Document] và List[str] để đưa vào CrossEncoder
@@ -131,6 +136,8 @@ class RerankingDocumentCore:
             scores = model.rank(
                 query=query,
                 documents=text_contents,
+                show_progress_bar=True,
+                batch_size=2,
             )
 
             # 5. Khớp kết quả trả về với danh sách Document ban đầu và gán điểm số vào metadata
@@ -175,6 +182,10 @@ class RerankingDocumentCore:
         data.pop('_collection_name')
         return ". ".join(map(str, data.values())) + '\n'
 
+    @staticmethod
+    def format_list_document(list_document: List[Tuple[Document, float | int]]) -> list[Document]:
+        return [doc[0] for doc in list_document]
+
 
 class RerankingDocument(BaseTool):
     """
@@ -191,9 +202,9 @@ class RerankingDocument(BaseTool):
     def _run(
             self,
             query: str,
-            documents: List[Any],
+            documents: List[Document],
             model_name: Optional[str] = None,
-            **kwargs: Any
+            # **kwargs: Any
     ) -> List[Tuple[Document, float]]:
         """
         Thực hiện xếp hạng lại tài liệu đồng bộ.
@@ -208,9 +219,9 @@ class RerankingDocument(BaseTool):
     async def _arun(
             self,
             query: str,
-            documents: List[Any],
+            documents: List[Document],
             model_name: Optional[str] = None,
-            **kwargs: Any
+            # **kwargs: Any
     ) -> List[Tuple[Document, float]]:
         """
         Thực hiện xếp hạng lại tài liệu bất đồng bộ.

@@ -15,6 +15,7 @@ khác nhau và mở rộng bộ công cụ (Tools).
 - **LLM Abstraction:** `BaseChatModel` của LangChain.
 - **Data & Validation:** Pydantic v2 (Bắt buộc dùng cho cấu trúc Schema của Tools).
 - **Vector Store:** Qdrant
+- **Database:** Mongodb
 - **Environment:** Quản lý bằng `.env` (API Keys) và biến môi trường.
 - **UI:** NEXT js
 
@@ -31,6 +32,11 @@ khác nhau và mở rộng bộ công cụ (Tools).
 
 ### 2. Chia các chức năng thành các service, các service áp dụng singleton
 
+1. **Agent Service** nhiệm vụ quản lý các agent của các người dùng, mỗi người dùng sẽ có 1 agent duy nhất. ngoài ra còn
+   hỗ trợ stream câu trả lời của agent của user
+2. **User service** quản lý tạo user
+3. **Chat service** quản lý tạo, xóa và chat với agent
+
 ### 3. Tổ chức thư mục (Folder Structure)
 
 - `app/api/`: Chứa các router FastAPI.
@@ -42,6 +48,38 @@ khác nhau và mở rộng bộ công cụ (Tools).
 - `app/storage`: Chứa các cấu hình kết nối các database
 - `app/service`: Chứa các service.
 - `app/config`: Chứa các cấu hình system prompt của agent chính và cấu hình cho các sub agent.
+- `frontend`: Chứa giao diện UI 
+
+### 4. API
+
+1. API response trong trường hợp trường hợp response success:
+
+- Các API thường, không yêu cầu phân trang(pagination) dữ liệu:
+
+```json
+{
+  "success": "type(boolean)",
+  "data": "type(any)",
+  "message": "type(string) | none"
+}
+```
+
+2. API response cho trường hợp response error:
+
+```json
+{
+  "success": "type(boolean)",
+  "error_code": "type(string)",
+  "message": "type(string) | none"
+}
+```
+
+- error_code là một chuỗi string thể hiện chi tiết lỗi(http status response chỉ là gom nhóm lỗi trong phạm vi nào,
+  error_code sẽ cho biết cụ thể lỗi là gì)
+- Danh sách các error_code(và http status của nó) ở backend/app/core/error_code.py
+- Trường hợp lười catch lỗi quá thì display message trả về cho client
+
+3. xác thực API thông qua bearer token, với access token có hiệu lực 5p, refresh token có hiệu lực 1 ngày
 
 ## 🧠 Nguyên tắc Coding dành cho AI Assistant (AI Instructions)
 

@@ -128,7 +128,7 @@ class QdrantVectorStoreManager:
             filter: Optional[Any] = None,
             embeddings: Optional[Embeddings] = None,
             **kwargs
-    ) -> List[Tuple[Document, float]]:
+    ) -> List[Document]:
         """
         Tìm kiếm ngữ nghĩa (Semantic Search) trên collection được chỉ định.
         
@@ -158,7 +158,7 @@ class QdrantVectorStoreManager:
             if score_threshold is not None:
                 results = [(doc, score) for doc, score in results if score >= score_threshold]
 
-            return results
+            return [doc for doc, score in results]
         except Exception as e:
             # Chống lỗi: Ghi nhận và ném ngoại lệ khi có lỗi kết nối hoặc truy vấn Vector DB
             raise RuntimeError(

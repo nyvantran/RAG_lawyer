@@ -1,0 +1,10 @@
+name: "lawyer-agent"
+#provider: "google"
+#model_name: "gemini-2.5-flash"
+temperature: 0.0
+system_prompt_path: "app/config/prompts/lawyer_agent_prompt_1.txt"
+#tools:
+#  - "VectorSearchTool"
+#  - "RerankingDocument"
+subagents:
+  - "research_sub_agent"
