@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # 1. MongoDB Database Container
   mongodb:
     image: mongo:7.0
     container_name: rag_lawyer_mongodb
@@ -13,21 +14,80 @@ services:
     volumes:
       - mongodb_data:/data/db
 
-  mongo-express:
-    image: mongo-express:latest
-    container_name: rag_lawyer_mongo_express
+  # 2. Qdrant Vector Store Container
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rag_lawyer_qdrant
     restart: always
     ports:
-      - "8081:8081"
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  # 3. Backend (FastAPI) Container
+  backend:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      args:
+        - DEVICE=cpu
+    container_name: rag_lawyer_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount volume để cache Hugging Face models (tránh tải lại model mỗi lần khởi động)
+      - hf_cache:/workspace/.cache/huggingface
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: secret_password
-      ME_CONFIG_MONGODB_URL: mongodb://admin:secret_password@mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: express_password
+      # LLM API Keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # Cấu hình LLM & Embedding
+      - DEFAULT_LLM_PROVIDER=${DEFAULT_LLM_PROVIDER}
+      - DEFAULT_LLM_MODEL=${DEFAULT_LLM_MODEL}
+      - DEFAULT_EMB_PROVIDER=${DEFAULT_EMB_PROVIDER}
+      - DEFAULT_EMB_MODEL=${DEFAULT_EMB_MODEL}
+      - DEFAULT_RERANK_MODEL=${DEFAULT_RERANK_MODEL}
+      - VECTOR_SEARCH=${VECTOR_SEARCH}
+      # Cấu hình kết nối Database & Vector Store nội bộ Docker
+      - QDRANT_URL=http://qdrant:6333
+      - MONGODB_URL=mongodb://admin:secret_password@mongodb:27017/
+      - MONGODB_DB_NAME=rag_lawyer
+      - CHECKPOINT_PROVIDER=mongodb
+      # JWT Auth
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS}
+      # App Config
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - DEBUG=True
     depends_on:
       - mongodb
+      - qdrant
+
+  # 4. Frontend (Next.js) Container
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Nhúng địa chỉ backend khi build Next.js (chỉ cần localhost:8000 nếu truy cập từ máy host)
+        - NEXT_PUBLIC_API_URL=http://localhost:8000
+    container_name: rag_lawyer_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
 
 volumes:
   mongodb_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  hf_cache:
     driver: local

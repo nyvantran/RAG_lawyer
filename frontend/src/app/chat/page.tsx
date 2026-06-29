@@ -20,6 +20,8 @@ interface ChatMessage {
 }
 
 export default function ChatPage() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -65,7 +67,7 @@ export default function ChatPage() {
     setIsLoadingSessions(true);
     setError("");
     try {
-      const response = await fetchWithAuth("http://localhost:8000/api/chat/sessions");
+      const response = await fetchWithAuth(`${API_URL}/api/chat/sessions`);
       const data = await response.json();
       if (response.ok && data.success) {
         setSessions(data.data);
@@ -84,7 +86,7 @@ export default function ChatPage() {
     setIsLoadingMessages(true);
     setError("");
     try {
-      const response = await fetchWithAuth(`http://localhost:8000/api/chat/sessions/${sessionId}/messages`);
+      const response = await fetchWithAuth(`${API_URL}/api/chat/sessions/${sessionId}/messages`);
       const data = await response.json();
       if (response.ok && data.success) {
         setMessages(data.data);
@@ -110,7 +112,7 @@ export default function ChatPage() {
   const handleCreateSession = async (customTitle?: string) => {
     setError("");
     try {
-      const response = await fetchWithAuth("http://localhost:8000/api/chat/sessions", {
+      const response = await fetchWithAuth(`${API_URL}/api/chat/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -142,7 +144,7 @@ export default function ChatPage() {
 
     setError("");
     try {
-      const response = await fetchWithAuth(`http://localhost:8000/api/chat/sessions/${sessionId}`, {
+      const response = await fetchWithAuth(`${API_URL}/api/chat/sessions/${sessionId}`, {
         method: "DELETE"
       });
       const data = await response.json();
@@ -191,7 +193,7 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const response = await fetchWithAuth(`http://localhost:8000/api/chat/sessions/${sessionId}/messages`, {
+      const response = await fetchWithAuth(`${API_URL}/api/chat/sessions/${sessionId}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

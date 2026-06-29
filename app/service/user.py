@@ -67,7 +67,7 @@ class UserService:
                 raise ValueError(ErrorCode.USER_ALREADY_EXISTS.value)
             
             # Mã hóa mật khẩu
-            hashed_password = SecurityHelper.get_password_hash(user_data.password)
+            hashed_password = SecurityHelper.get_password_hash(str(user_data.password))
             
             # Tạo bản ghi người dùng mới
             user_id = uuid.uuid4().hex

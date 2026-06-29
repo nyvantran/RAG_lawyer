@@ -29,8 +29,9 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 
     if (refreshToken) {
       try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         // Tự động gọi API refresh token
-        const refreshResponse = await fetch("http://localhost:8000/api/auth/refresh", {
+        const refreshResponse = await fetch(`${API_URL}/api/auth/refresh`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -10,13 +10,14 @@ langchain_qdrant==1.1.0
 langgraph==1.2.6
 pydantic==2.13.4
 PyJWT==2.13.0
-pymongo==4.17.0
+pymongo==4.15.0
 python-dotenv==1.2.2
-python_bcrypt==0.3.2
+langgraph-checkpoint-mongodb
 PyYAML==6.0.3
 qdrant_client==1.18.0
 research_agent==0.0.2
 sentence_transformers==5.5.1
 torch==2.12.0+cu126
 uvicorn==0.49.0
+python-dotenv
 sentence-transformers
